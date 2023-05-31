@@ -5,11 +5,11 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add Db Context
-var CONNECTION_STRING_HOTEL_LISTING_DB = builder.Configuration.GetConnectionString("HotelListingDbConnectionString");
+var CONNECTION_STRING = builder.Configuration.GetConnectionString("HotelListingDbConnectionString");
 
 builder.Services.AddDbContext<HotelListingDbContext>(DbOptions =>
 {
-    DbOptions.UseSqlServer(CONNECTION_STRING_HOTEL_LISTING_DB);
+    DbOptions.UseSqlServer(CONNECTION_STRING);
 });
 
 // Add services to the container.
