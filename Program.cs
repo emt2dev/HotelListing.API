@@ -16,8 +16,15 @@ builder.Services.AddDbContext<HotelListingDbContext>(DbOptions =>
 });
 
 // Repositories
+
+/* Generic Interface and Repository */
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>)); // uses these interfaces/classes
+
+/* Countries Interface and Repository */
 builder.Services.AddScoped<ICountriesRepository, CountriesRepository>(); // allows us to implement additional methods
+
+/* Hotels Interface and Repository */
+builder.Services.AddScoped<IHotelsRepository, HotelsRepository>();
 
 // Add services to the container.
 builder.Services.AddControllers();
