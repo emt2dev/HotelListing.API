@@ -1,40 +1,58 @@
 ﻿using HotelListing.API.DataAccessLayer.Interfaces;
+using HotelListing.API.DataAccessLayer.Models;
 using HotelListing.API.DataLayer;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelListing.API.DataAccessLayer.Repository
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
-
-
-        public Task<T> AddAsync(T entity)
+        private readonly HotelListingDbContext _context;
+        public GenericRepository(HotelListingDbContext context)
         {
-            throw new NotImplementedException();
+            _context = context;
         }
 
-        public Task DeleteAsync(int id)
+        public async Task<T> AddAsync(T entity)
         {
-            throw new NotImplementedException();
+            // async keyword automatically maps to correct type _context.Countries.AddAsync(country)
+            await _context.AddAsync(entity);
+            await _context.SaveChangesAsync(); // saves to the db
+
+            return entity;
         }
 
-        public Task<bool> Exists(int id)
+        public async Task DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            var EntitySearchingFor = await GetAsync(id);
+            _context.Set<T>().Remove(EntitySearchingFor); // this cannot be called asynchronously
+
+            await _context.SaveChangesAsync();
         }
 
-        public Task<List<T>> GetAllAsync()
+        public async Task<bool> Exists(int id)
         {
-            throw new NotImplementedException();
+            var EntitySearchingFor = await GetAsync(id);
+
+            return EntitySearchingFor != null;
         }
 
-        public Task<T> GetAsync(T entity)
+        public async Task<List<T>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _context.Set<T>().ToListAsync(); // gets the dbset of type given
         }
 
-        public Task UpdateAsync(T entity)
+        public async Task<T> GetAsync(int? id)
         {
-            throw new NotImplementedException();
+            if (id is null) return null;
+
+            return await _context.Set<T>().FindAsync(id); // returns one
+        }
+
+        public async Task UpdateAsync(T entity)
+        {
+            _context.Update(entity); // updates entity state to modified
+            await _context.SaveChangesAsync();
         }
     }
 }

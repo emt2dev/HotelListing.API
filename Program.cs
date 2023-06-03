@@ -1,4 +1,6 @@
 using HotelListing.API.Configurations;
+using HotelListing.API.DataAccessLayer.Interfaces;
+using HotelListing.API.DataAccessLayer.Repository;
 using HotelListing.API.DataLayer;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -13,7 +15,9 @@ builder.Services.AddDbContext<HotelListingDbContext>(DbOptions =>
     DbOptions.UseSqlServer(CONNECTION_STRING);
 });
 
-
+// Repositories
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>)); // uses these interfaces/classes
+builder.Services.AddScoped<ICountriesRepository, CountriesRepository>(); // allows us to implement additional methods
 
 // Add services to the container.
 builder.Services.AddControllers();

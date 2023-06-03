@@ -1,37 +1,25 @@
 ﻿using HotelListing.API.DataAccessLayer.Interfaces;
+using HotelListing.API.DataAccessLayer.Models;
+using HotelListing.API.DataLayer;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelListing.API.DataAccessLayer.Repository
 {
-    public class CountriesRepository<Country> : ICountriesRepository
+    public class CountriesRepository : GenericRepository<Country>, ICountriesRepository
     {
-        public Task<Models.Country> AddAsync(Models.Country entity)
+        private readonly HotelListingDbContext _context;
+        // means we use implementations from the inheritance interfaces/classes
+        // ICountriesRepository uses GenericRepository<Country> to fill the types
+        public CountriesRepository(HotelListingDbContext context) : base(context)
         {
-            throw new NotImplementedException();
+            this._context = context;
         }
 
-        public Task DeleteAsync(int id)
+        public async Task<Country> GetDetails(int? id)
         {
-            throw new NotImplementedException();
-        }
 
-        public Task<bool> Exists(int id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<Models.Country>> GetAllAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Models.Country> GetAsync(Models.Country entity)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task UpdateAsync(Models.Country entity)
-        {
-            throw new NotImplementedException();
+            return await _context.Countries.Include(q => q.Hotels)
+                .FirstOrDefaultAsync(q => q.Id == id); // returns one or null if doesn't exist.
         }
     }
 }
