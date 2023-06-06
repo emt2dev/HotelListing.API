@@ -7,6 +7,7 @@ using AutoMapper;
 using HotelListing.API.DataAccessLayer.DTOs.Countries;
 using HotelListing.API.DataAccessLayer.Interfaces;
 using HotelListing.API.DataAccessLayer.Repository;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelListing.API.Controllers
 {
@@ -56,6 +57,7 @@ namespace HotelListing.API.Controllers
         // PUT: api/Countries/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> PutCountry(int id, UpdateCountryDTO DTO)
         {
             if (id != DTO.Id) return BadRequest("Invalid Record Id");
@@ -122,6 +124,7 @@ namespace HotelListing.API.Controllers
         // POST: api/Countries
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<Country>> PostCountry(CreateCountryDTO CreateCountryDTO)
         {
             /*
@@ -158,6 +161,10 @@ namespace HotelListing.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCountry(int id)
         {
+
+            var countrySearchedFor = await _countriesRepository.GetAsync(id);
+
+            if (countrySearchedFor == null) return NotFound();
 
             await _countriesRepository.DeleteAsync(id);
 

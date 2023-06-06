@@ -1,9 +1,15 @@
 using HotelListing.API.Configurations;
 using HotelListing.API.DataAccessLayer.Interfaces;
+using HotelListing.API.DataAccessLayer.Models;
 using HotelListing.API.DataAccessLayer.Repository;
+using HotelListing.API.DataAccessLayer.Services;
 using HotelListing.API.DataLayer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,22 +21,8 @@ builder.Services.AddDbContext<HotelListingDbContext>(DbOptions =>
     DbOptions.UseSqlServer(CONNECTION_STRING);
 });
 
-// Repositories
-
-/* Generic Interface and Repository */
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>)); // uses these interfaces/classes
-
-/* Countries Interface and Repository */
-builder.Services.AddScoped<ICountriesRepository, CountriesRepository>(); // allows us to implement additional methods
-
-/* Hotels Interface and Repository */
-builder.Services.AddScoped<IHotelsRepository, HotelsRepository>();
-
 // Add services to the container.
 builder.Services.AddControllers();
-
-// Adds AutoMapper Config
-builder.Services.AddAutoMapper(typeof(MapperConfig));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -51,6 +43,53 @@ builder.Host.UseSerilog((builderContext, loggerConfig) =>
     .ReadFrom
     .Configuration(builderContext.Configuration));
 
+/* 
+ * 
+ * Repositories
+ * 
+ */
+
+/* Adds AutoMapper Config */
+builder.Services.AddAutoMapper(typeof(MapperConfig));
+
+/* Adds Identity Core */
+builder.Services.AddIdentityCore<APIUser>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<HotelListingDbContext>();
+
+/* Generic Interface and Repository */
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>)); // uses these interfaces/classes
+
+/* Countries Interface and Repository */
+builder.Services.AddScoped<ICountriesRepository, CountriesRepository>(); // allows us to implement additional methods
+
+/* Hotels Interface and Repository */
+builder.Services.AddScoped<IHotelsRepository, HotelsRepository>();
+
+/* IAuthManager */
+builder.Services.AddScoped<IAuthManager, AuthManager>();
+
+/* Authentication plus JWT Bearer */
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Audience"]))
+        };
+    }
+);
+
 
 var app = builder.Build();
 
@@ -64,6 +103,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

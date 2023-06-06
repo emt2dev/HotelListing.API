@@ -29,9 +29,7 @@ namespace HotelListing.API.Controllers
         {
             var GetAllHotels = await _hotelsRepository.GetAllAsync();
 
-            var AllHotels = _mapper.Map<List<HotelDTO>>(GetAllHotels);
-
-            return Ok(AllHotels);
+            return Ok(_mapper.Map<List<HotelDTO>>(GetAllHotels));
         }
 
         // GET api/<HotelsController>/5
@@ -40,9 +38,9 @@ namespace HotelListing.API.Controllers
         {
             var hotelSearchedFor = await _hotelsRepository.GetAsync(id);
 
-            var hotelFound = _mapper.Map<HotelDTO>(hotelSearchedFor);
+            if (hotelSearchedFor == null) return NotFound();
 
-            return Ok(hotelFound);
+            return Ok(_mapper.Map<HotelDTO>(hotelSearchedFor));
         }
 
         // POST api/<HotelsController>
@@ -93,6 +91,10 @@ namespace HotelListing.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteHotel(int id)
         {
+            var hotelSearchedFor = await _hotelsRepository.GetAsync(id);
+            
+            if (hotelSearchedFor == null) return NotFound();
+
             await _hotelsRepository.DeleteAsync(id);
 
             return NoContent();

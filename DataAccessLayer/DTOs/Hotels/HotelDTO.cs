@@ -5,7 +5,5 @@ namespace HotelListing.API.DataAccessLayer.DTOs.Hotels
     public class HotelDTO : BaseHotelDTO
     {
         public int Id { get; set; }
-        public string Address { get; set; }
-        public double Rating { get; set; }
     }
 }
