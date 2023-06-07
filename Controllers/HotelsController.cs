@@ -3,6 +3,7 @@ using HotelListing.API.DataAccessLayer.DTOs.Hotels;
 using HotelListing.API.DataAccessLayer.Interfaces;
 using HotelListing.API.DataAccessLayer.Models;
 using HotelListing.API.DataAccessLayer.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,6 +46,7 @@ namespace HotelListing.API.Controllers
 
         // POST api/<HotelsController>
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<Hotel>> PostHotel(CreateHotelDTO DTO)
         {
             var newHotel = _mapper.Map<Hotel>(DTO);
@@ -58,6 +60,7 @@ namespace HotelListing.API.Controllers
 
         // PUT api/<HotelsController>/5
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> PutHotel(int id, UpdateHotelDTO DTO)
         {
             if (id != DTO.Id) return BadRequest("Invalid Record ID");
@@ -89,6 +92,7 @@ namespace HotelListing.API.Controllers
 
         // DELETE api/<HotelsController>/5
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteHotel(int id)
         {
             var hotelSearchedFor = await _hotelsRepository.GetAsync(id);

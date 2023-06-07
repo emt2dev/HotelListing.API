@@ -55,7 +55,9 @@ builder.Services.AddAutoMapper(typeof(MapperConfig));
 /* Adds Identity Core */
 builder.Services.AddIdentityCore<APIUser>()
     .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<HotelListingDbContext>();
+    .AddTokenProvider<DataProtectorTokenProvider<APIUser>>("HotelListingAPI")
+    .AddEntityFrameworkStores<HotelListingDbContext>()
+    .AddDefaultTokenProviders();
 
 /* Generic Interface and Repository */
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>)); // uses these interfaces/classes
@@ -85,7 +87,7 @@ builder.Services.AddAuthentication(options =>
             ClockSkew = TimeSpan.Zero,
             ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
             ValidAudience = builder.Configuration["JwtSettings:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Audience"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"])),
         };
     }
 );
