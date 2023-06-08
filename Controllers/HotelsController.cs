@@ -3,6 +3,7 @@ using HotelListing.API.DataAccessLayer.DTOs.Hotels;
 using HotelListing.API.DataAccessLayer.Interfaces;
 using HotelListing.API.DataAccessLayer.Models;
 using HotelListing.API.DataAccessLayer.Repository;
+using HotelListing.API.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -39,7 +40,7 @@ namespace HotelListing.API.Controllers
         {
             var hotelSearchedFor = await _hotelsRepository.GetAsync(id);
 
-            if (hotelSearchedFor == null) return NotFound();
+            if (hotelSearchedFor == null) throw new NotFoundException(nameof(GetHotel), id);
 
             return Ok(_mapper.Map<HotelDTO>(hotelSearchedFor));
         }
@@ -67,7 +68,7 @@ namespace HotelListing.API.Controllers
 
             var hotelSearchedFor = await _hotelsRepository.GetAsync(id);
 
-            if (hotelSearchedFor == null) return NotFound();
+            if (hotelSearchedFor == null) throw new NotFoundException(nameof(PutHotel), id);
 
             _mapper.Map(DTO, hotelSearchedFor);
 
@@ -97,7 +98,7 @@ namespace HotelListing.API.Controllers
         {
             var hotelSearchedFor = await _hotelsRepository.GetAsync(id);
             
-            if (hotelSearchedFor == null) return NotFound();
+            if (hotelSearchedFor == null) throw new NotFoundException(nameof(DeleteHotel), id);
 
             await _hotelsRepository.DeleteAsync(id);
 

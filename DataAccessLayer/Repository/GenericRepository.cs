@@ -1,5 +1,8 @@
-﻿using HotelListing.API.DataAccessLayer.Interfaces;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using HotelListing.API.DataAccessLayer.Interfaces;
 using HotelListing.API.DataAccessLayer.Models;
+using HotelListing.API.DataAccessLayer.Pagination;
 using HotelListing.API.DataLayer;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,9 +11,12 @@ namespace HotelListing.API.DataAccessLayer.Repository
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         private readonly HotelListingDbContext _context;
-        public GenericRepository(HotelListingDbContext context)
+        private readonly IMapper _mapper;
+
+        public GenericRepository(HotelListingDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         public async Task<T> AddAsync(T entity)
@@ -40,6 +46,23 @@ namespace HotelListing.API.DataAccessLayer.Repository
         public async Task<List<T>> GetAllAsync()
         {
             return await _context.Set<T>().ToListAsync(); // gets the dbset of type given
+        }
+
+        public async Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters QP)
+        {
+            var totalSize = await _context.Set<T>().CountAsync();
+            var records = await _context.Set<T>()
+                .Skip(QP.NextPageNumber)
+                .Take(QP.PageSize)
+                .ProjectTo<TResult>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            return new PagedResult<TResult>
+            {
+                Records = records,
+                PageNumber = QP.NextPageNumber,
+                TotalCount = totalSize
+            };
         }
 
         public async Task<T> GetAsync(int? id)

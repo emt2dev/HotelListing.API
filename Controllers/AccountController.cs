@@ -14,10 +14,12 @@ namespace HotelListing.API.Controllers
     public class AccountController : ControllerBase
     {
         private IAuthManager _iAuthManager;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(IAuthManager iAuthManager)
+        public AccountController(IAuthManager iAuthManager, ILogger<AccountController> logger)
         {
             this._iAuthManager = iAuthManager;
+            this._logger = logger;
         }
 
         /* POST: api/Account/register */
@@ -29,6 +31,8 @@ namespace HotelListing.API.Controllers
 
         public async Task<ActionResult> Register([FromBody] APIUserDTO DTO)
         {
+            _logger.LogInformation($"Failed Register Attempt for {DTO.Email}");
+
             var errors = await _iAuthManager.RegisterNewUser(DTO);
 
             if (errors.Any())
@@ -53,6 +57,8 @@ namespace HotelListing.API.Controllers
 
         public async Task<ActionResult> Login([FromBody] APIUserLoginDTO DTO)
         {
+            _logger.LogInformation($"Failed Login Attempt for {DTO.Email}");
+
             var authenticatedUser = await _iAuthManager.LoginUser(DTO);
 
             if (authenticatedUser == null) return Unauthorized();
@@ -69,6 +75,8 @@ namespace HotelListing.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)] // if okay
         public async Task<ActionResult> RegisterAdmin([FromBody] APIUserDTO DTO)
         {
+            _logger.LogInformation($"Failed Register Admin Attempt for {DTO.Email}");
+
             var errors = await _iAuthManager.RegisterNewAdmin(DTO);
 
             if (errors.Any())
@@ -93,6 +101,8 @@ namespace HotelListing.API.Controllers
 
         public async Task<ActionResult> RefreshToken([FromBody] AuthResponseDTO DTO)
         {
+            _logger.LogInformation($"Failed Refresh Token Attempt for {DTO.UserId}");
+
             var authenticatedUser = await _iAuthManager.VerifyRefreshToken(DTO);
 
             if (authenticatedUser == null) return Unauthorized();

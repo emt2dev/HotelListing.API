@@ -4,8 +4,11 @@ using HotelListing.API.DataAccessLayer.Models;
 using HotelListing.API.DataAccessLayer.Repository;
 using HotelListing.API.DataAccessLayer.Services;
 using HotelListing.API.DataLayer;
+using HotelListing.API.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -21,8 +24,7 @@ builder.Services.AddDbContext<HotelListingDbContext>(DbOptions =>
     DbOptions.UseSqlServer(CONNECTION_STRING);
 });
 
-// Add services to the container.
-builder.Services.AddControllers();
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -92,6 +94,38 @@ builder.Services.AddAuthentication(options =>
     }
 );
 
+/* API Versioning */
+builder.Services.AddApiVersioning(options =>
+{
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = ApiVersionReader.Combine(
+            new QueryStringApiVersionReader("api-version"),
+            new HeaderApiVersionReader("X-Version"),
+            new MediaTypeApiVersionReader("ver")
+        );
+});
+
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+/* Add Caching Part One */
+builder.Services.AddResponseCaching(options =>
+{
+    options.MaximumBodySize = 1024;
+    options.UseCaseSensitivePaths = true;
+});
+
+// Add services to the container.
+builder.Services.AddControllers()
+    .AddOData(options =>
+    {
+        options.Select().Filter().OrderBy();
+    });
 
 var app = builder.Build();
 
@@ -103,7 +137,28 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<ExceptionMiddleware>();
+
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
+
+/* Add Caching Part Two */
+app.UseResponseCaching();
+
+app.Use(async (context, next) =>
+{
+    context.Response.GetTypedHeaders().CacheControl = new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
+    {
+        Public = true,
+        MaxAge = TimeSpan.FromSeconds(10) // refresh the cache every this many seconds
+    };
+
+    context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Vary] = new string[] { "Accept-Encoding" };
+
+    await next();
+});
+
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -10,36 +10,28 @@ using HotelListing.API.DataAccessLayer.Repository;
 using Microsoft.AspNetCore.Authorization;
 using HotelListing.API.Exceptions;
 using HotelListing.API.DataAccessLayer.Pagination;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace HotelListing.API.Controllers
 {
+
     [Route("api/v{version:apiVersion}/countries")]
     [ApiController]
-    public class CountriesController : ControllerBase
+    [ApiVersion("2.0")]
+    public class CountriesV2Controller : ControllerBase
     {
         private readonly ICountriesRepository _countriesRepository; // the controller will never touch the context/sql
         private readonly IMapper _mapper;
 
-        public CountriesController(ICountriesRepository countriesRepository, IMapper autoMapper)
+        public CountriesV2Controller(ICountriesRepository countriesRepository, IMapper autoMapper)
         {
             this._countriesRepository = countriesRepository;
             this._mapper = autoMapper;
         }
 
-        // GET: api/Countries/?StartIndex=0&pagesize=5&pagenumber=1
+        // GET: api/Countries
         [HttpGet]
-        public async Task<ActionResult<PagedResult<CountryDTO>>> GetPagedCountries([FromQuery] QueryParameters QP)
-        {
-
-            // var GetAllCountries = await _context.Countries.ToListAsync();
-            var pagedResultCountries = await _countriesRepository.GetAllAsync<CountryDTO>(QP);
-
-            return Ok(pagedResultCountries);
-        }
-
-        
-        // GET: api/Countries/GetAll
-        [HttpGet("GetAll")]
+        [EnableQuery]
         public async Task<ActionResult<IEnumerable<CountryDTO>>> GetCountries()
         {
 
@@ -50,7 +42,18 @@ namespace HotelListing.API.Controllers
 
             return Ok(AllCountries);
         }
-        
+        /*
+        // GET: api/Countries/?StartIndex=0&pagesize=5&pagenumber=1
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<CountryDTO>>> GetPagedCountries([FromQuery] QueryParameters QP)
+        {
+
+            // var GetAllCountries = await _context.Countries.ToListAsync();
+            var pagedResultCountries = await _countriesRepository.GetAllAsync<CountryDTO>(QP);
+
+            return Ok(pagedResultCountries);
+        }
+        */
 
         // GET: api/Countries/5
         [HttpGet("{id}")]
@@ -61,7 +64,7 @@ namespace HotelListing.API.Controllers
 
             /* Below we include the first hotel inside of the country row */
             // var countrySearchedFor = await _context.Countries.Include(countryFound => countryFound.Hotels).FirstOrDefaultAsync(hotelFound => hotelFound.Id == id);
-            
+
             var countrySearchedFor = await _countriesRepository.GetDetails(id);
 
             var countryFoundDTO = _mapper.Map<CountryDetailsDTO>(countrySearchedFor);
@@ -87,7 +90,7 @@ namespace HotelListing.API.Controllers
             {
                 await _countriesRepository.UpdateAsync(countrySearchedFor);
             }
-            catch (DbUpdateConcurrencyException) 
+            catch (DbUpdateConcurrencyException)
             {
                 if (!await CountryExists(id))
                 {

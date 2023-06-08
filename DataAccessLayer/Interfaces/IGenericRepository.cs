@@ -1,4 +1,6 @@
-﻿namespace HotelListing.API.DataAccessLayer.Interfaces
+﻿using HotelListing.API.DataAccessLayer.Pagination;
+
+namespace HotelListing.API.DataAccessLayer.Interfaces
 {
     public interface IGenericRepository<T> where T : class
     {
@@ -6,6 +8,7 @@
         // in charge of communicating with the database on our behalf, the context won't be called in the controller
         Task<T> GetAsync(int? id); // asynchronous task to receive type of T with argument of int id
         Task<List<T>> GetAllAsync(); // Gets Multiple
+        Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters);
         Task<T> AddAsync(T entity); // adds a row
         Task UpdateAsync(T entity); // Does not return data but performs action
         Task DeleteAsync(int id);
