@@ -43,9 +43,11 @@ namespace HotelListing.API.DataAccessLayer.Repository
             return EntitySearchingFor != null;
         }
 
-        public async Task<List<T>> GetAllAsync()
+        public async Task<List<TResult>> GetAllAsync<TResult>()
         {
-            return await _context.Set<T>().ToListAsync(); // gets the dbset of type given
+            return await _context.Set<T>()
+                .ProjectTo<TResult>(_mapper.ConfigurationProvider)
+                .ToListAsync(); // gets the dbset of type given
         }
 
         public async Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters QP)
